@@ -31,23 +31,26 @@ public interface LootEntityFunction extends LootContextUser {
     record DamageEntity(
             Holder<DamageType> damageType,
             NumberProvider damageAmount,
-            Optional<EntityProvider> directEntity,
-            Optional<EntityProvider> causingEntity,
-            Optional<LocationProvider> damageSourcePosition
+            Optional<Holder<EntityProvider>> directEntity,
+            Optional<Holder<EntityProvider>> causingEntity,
+            Optional<Holder<LocationProvider>> damageSourcePosition
     ) implements LootEntityFunction {
         public static final MapCodec<DamageEntity> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 DamageType.CODEC.fieldOf("damage_type").forGetter(DamageEntity::damageType),
                 NumberProviders.CODEC.fieldOf("damage_amount").forGetter(DamageEntity::damageAmount),
-
+                EntityProvider.REFERENCE_CODEC.optionalFieldOf("direct_entity").forGetter(DamageEntity::directEntity),
+                EntityProvider.REFERENCE_CODEC.optionalFieldOf("causing_entity").forGetter(DamageEntity::directEntity),
+                LocationProvider.REFERENCE_CODEC.optionalFieldOf("damage_source_position").forGetter(DamageEntity::damageSourcePosition)
         ).apply(instance, DamageEntity::new));
+
         @Override
         public void apply(LootContext context, Entity entity) {
             entity.hurt(
                     new DamageSource(
                             this.damageType,
-                            this.directEntity.map(provider -> provider.get(context)).orElse(null),
-                            this.causingEntity.map(provider -> provider.get(context)).orElse(null),
-                            damageSourcePosition.map(provider -> provider.getPosition(context)).orElse(null)
+                            this.directEntity.map(provider -> provider.value().get(context)).orElse(null),
+                            this.causingEntity.map(provider -> provider.value().get(context)).orElse(null),
+                            damageSourcePosition.map(provider -> provider.value().getPosition(context)).orElse(null)
                     ),
                     this.damageAmount.getFloat(context)
             );
