@@ -4,13 +4,14 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.forgetme1ody.contextutil.loot.providers.ContextEntityProvider;
-import io.github.forgetme1ody.contextutil.loot.providers.ContextPositionProvider;
+import io.github.forgetme1ody.contextutil.loot.providers.ContextLocationProvider;
 import io.github.forgetme1ody.contextutil.registries.Registries;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.RegistryCodecs;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.RegistryFileCodec;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.effect.MobEffect;
@@ -19,6 +20,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootContext;
@@ -40,12 +44,12 @@ public interface ContextEntityFunction extends LootContextUser {
             Holder<DamageType> damageType,
             NumberProvider damageAmount
     ) {
-        return damageEntity(
+        return new DamageEntity(
                 damageType,
                 damageAmount,
-                null,
-                null,
-                null
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()
         );
     }
 
@@ -54,12 +58,12 @@ public interface ContextEntityFunction extends LootContextUser {
             NumberProvider damageAmount,
             @Nullable Holder<ContextEntityProvider> directEntity
     ) {
-        return damageEntity(
+        return new DamageEntity(
                 damageType,
                 damageAmount,
-                directEntity,
-                null,
-                null
+                Optional.ofNullable(directEntity),
+                Optional.empty(),
+                Optional.empty()
         );
     }
 
@@ -69,12 +73,12 @@ public interface ContextEntityFunction extends LootContextUser {
             @Nullable Holder<ContextEntityProvider> directEntity,
             @Nullable Holder<ContextEntityProvider> causingEntity
     ) {
-        return damageEntity(
+        return new DamageEntity(
                 damageType,
                 damageAmount,
-                directEntity,
-                causingEntity,
-                null
+                Optional.ofNullable(directEntity),
+                Optional.ofNullable(causingEntity),
+                Optional.empty()
         );
     }
 
@@ -83,9 +87,9 @@ public interface ContextEntityFunction extends LootContextUser {
             NumberProvider damageAmount,
             @Nullable Holder<ContextEntityProvider> directEntity,
             @Nullable Holder<ContextEntityProvider> causingEntity,
-            @Nullable Holder<ContextPositionProvider> damageSourcePosition
+            @Nullable Holder<ContextLocationProvider> damageSourcePosition
     ) {
-        return new Damage(
+        return new DamageEntity(
                 damageType,
                 damageAmount,
                 Optional.ofNullable(directEntity),
@@ -112,7 +116,11 @@ public interface ContextEntityFunction extends LootContextUser {
             @Nullable NumberProvider duration,
             @Nullable NumberProvider amplifier
     ) {
-        return new ApplyMobEffect(effect, Optional.ofNullable(duration), Optional.ofNullable(amplifier));
+        return new ApplyMobEffect(
+                effect,
+                Optional.ofNullable(duration),
+                Optional.ofNullable(amplifier)
+        );
     }
 
     static ContextEntityFunction ignite(NumberProvider duration) {
@@ -139,6 +147,20 @@ public interface ContextEntityFunction extends LootContextUser {
         return Dismount.INSTANCE;
     }
 
+    static ContextEntityFunction applyAttributeModifier(
+            ResourceLocation id,
+            Holder<Attribute> attribute,
+            NumberProvider amount,
+            AttributeModifier.Operation operation
+    ) {
+        return new ApplyAttributeModifier(
+                id,
+                attribute,
+                amount,
+                operation
+        );
+    }
+
     void apply(LootContext context, Entity entity);
 
     MapCodec<? extends ContextEntityFunction> codec();
@@ -161,20 +183,20 @@ public interface ContextEntityFunction extends LootContextUser {
         }
     }
 
-    record Damage(
+    record DamageEntity(
             Holder<DamageType> damageType,
             NumberProvider amount,
             Optional<Holder<ContextEntityProvider>> directEntity,
             Optional<Holder<ContextEntityProvider>> causingEntity,
-            Optional<Holder<ContextPositionProvider>> damageSourcePosition
+            Optional<Holder<ContextLocationProvider>> damageSourcePosition
     ) implements ContextEntityFunction {
-        public static final MapCodec<Damage> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-                DamageType.CODEC.fieldOf("damage_type").forGetter(Damage::damageType),
-                NumberProviders.CODEC.fieldOf("amount").forGetter(Damage::amount),
-                ContextEntityProvider.REFERENCE_CODEC.optionalFieldOf("direct_entity").forGetter(Damage::directEntity),
-                ContextEntityProvider.REFERENCE_CODEC.optionalFieldOf("causing_entity").forGetter(Damage::directEntity),
-                ContextPositionProvider.REFERENCE_CODEC.optionalFieldOf("damage_source_position").forGetter(Damage::damageSourcePosition)
-        ).apply(instance, Damage::new));
+        public static final MapCodec<DamageEntity> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+                DamageType.CODEC.fieldOf("damage_type").forGetter(DamageEntity::damageType),
+                NumberProviders.CODEC.fieldOf("amount").forGetter(DamageEntity::amount),
+                ContextEntityProvider.REFERENCE_CODEC.optionalFieldOf("direct_entity").forGetter(DamageEntity::directEntity),
+                ContextEntityProvider.REFERENCE_CODEC.optionalFieldOf("causing_entity").forGetter(DamageEntity::directEntity),
+                ContextLocationProvider.REFERENCE_CODEC.optionalFieldOf("damage_source_position").forGetter(DamageEntity::damageSourcePosition)
+        ).apply(instance, DamageEntity::new));
 
         @Override
         public void apply(LootContext context, Entity entity) {
@@ -285,6 +307,42 @@ public interface ContextEntityFunction extends LootContextUser {
         @Override
         public void apply(LootContext context, Entity entity) {
             entity.stopRiding();
+        }
+
+        @Override
+        public MapCodec<? extends ContextEntityFunction> codec() {
+            return MAP_CODEC;
+        }
+    }
+
+    record ApplyAttributeModifier(
+            ResourceLocation id,
+            Holder<Attribute> attribute,
+            NumberProvider amount,
+            AttributeModifier.Operation operation
+    ) implements ContextEntityFunction {
+        public static final MapCodec<ApplyAttributeModifier> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+                ResourceLocation.CODEC.fieldOf("id").forGetter(ApplyAttributeModifier::id),
+                Attribute.CODEC.fieldOf("attribute").forGetter(ApplyAttributeModifier::attribute),
+                NumberProviders.CODEC.fieldOf("amount").forGetter(ApplyAttributeModifier::amount),
+                AttributeModifier.Operation.CODEC.fieldOf("operation").forGetter(ApplyAttributeModifier::operation)
+        ).apply(instance, ApplyAttributeModifier::new));
+
+        @Override
+        public void apply(LootContext context, Entity entity) {
+            if (entity instanceof LivingEntity livingEntity) {
+                AttributeInstance instance = livingEntity.getAttributes().getInstance(this.attribute);
+                if (instance != null) {
+                    instance.removeModifier(this.id);
+                    instance.addTransientModifier(
+                            new AttributeModifier(
+                                    this.id,
+                                    this.amount.getFloat(context),
+                                    this.operation
+                            )
+                    );
+                }
+            }
         }
 
         @Override

@@ -17,10 +17,7 @@ import net.minecraft.world.level.storage.loot.LootContextUser;
 import java.util.function.Function;
 
 public interface ContextSoundProvider extends LootContextUser {
-    Codec<ContextSoundProvider> DIRECT_CODEC = Codec.lazyInitialized(() -> {
-        Codec<ContextSoundProvider> dispatched = BuiltInRegistries.CONTEXT_SOUND_PROVIDER_TYPE.byNameCodec().dispatch(ContextSoundProvider::codec, Function.identity());
-        return Codec.either(Constant.INLINE_CODEC, dispatched).xmap(Either::unwrap, ContextSoundProvider::wrap);
-    });
+    Codec<ContextSoundProvider> DIRECT_CODEC = Codec.lazyInitialized(() -> BuiltInRegistries.CONTEXT_SOUND_PROVIDER_TYPE.byNameCodec().dispatch(ContextSoundProvider::codec, Function.identity()));
     Codec<Holder<ContextSoundProvider>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.CONTEXT_SOUND_PROVIDER, DIRECT_CODEC, true);
     Codec<HolderSet<ContextSoundProvider>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.CONTEXT_SOUND_PROVIDER, DIRECT_CODEC, true);
 
@@ -37,7 +34,6 @@ public interface ContextSoundProvider extends LootContextUser {
     MapCodec<? extends ContextSoundProvider> codec();
 
     record Constant(Holder<SoundEvent> value) implements ContextSoundProvider {
-        public static final Codec<Constant> INLINE_CODEC = SoundEvent.CODEC.xmap(Constant::new, Constant::value);
         public static final MapCodec<Constant> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 SoundEvent.CODEC.fieldOf("value").forGetter(Constant::value)
         ).apply(instance, Constant::new));

@@ -20,6 +20,7 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootContextUser;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParam;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,12 +28,30 @@ import java.util.Set;
 import java.util.function.Function;
 
 public interface ContextEntityProvider extends LootContextUser {
-    Codec<ContextEntityProvider> DIRECT_CODEC = Codec.lazyInitialized(() -> {
-        Codec<ContextEntityProvider> dispatched = BuiltInRegistries.CONTEXT_ENTITY_PROVIDER_TYPE.byNameCodec().dispatch(ContextEntityProvider::codec, Function.identity());
-        return Codec.either(SummonEntity.INLINE_CODEC, dispatched).xmap(Either::unwrap, ContextEntityProvider::wrap);
-    });
+    Codec<ContextEntityProvider> DIRECT_CODEC = Codec.lazyInitialized(() -> BuiltInRegistries.CONTEXT_ENTITY_PROVIDER_TYPE.byNameCodec().dispatch(ContextEntityProvider::codec, Function.identity()));
     Codec<Holder<ContextEntityProvider>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.CONTEXT_ENTITY_PROVIDER, DIRECT_CODEC, true);
     Codec<HolderSet<ContextEntityProvider>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.CONTEXT_ENTITY_PROVIDER, DIRECT_CODEC, true);
+
+    static ContextEntityProvider summon(
+            EntityType<?> entityType
+    ) {
+        return new SummonEntity(entityType, Optional.empty(), List.of());
+    }
+
+    static ContextEntityProvider summon(
+            EntityType<?> entityType,
+            ContextEntityFunction... modifiers
+    ) {
+        return new SummonEntity(entityType, Optional.empty(), List.of(modifiers));
+    }
+
+    static ContextEntityProvider summon(
+            EntityType<?> entityType,
+            @Nullable Holder<ContextLocationProvider> blockPos,
+            ContextEntityFunction... modifiers
+    ) {
+        return new SummonEntity(entityType, Optional.ofNullable(blockPos), List.of(modifiers));
+    }
 
     static ContextEntityProvider thisEntity() {
         return ThisEntity.INSTANCE;
@@ -56,26 +75,21 @@ public interface ContextEntityProvider extends LootContextUser {
 
     record SummonEntity(
             EntityType<?> entityType,
-            Optional<Holder<ContextBlockPosProvider>> blockPos,
+            Optional<Holder<ContextLocationProvider>> position,
             List<ContextEntityFunction> modifiers
     ) implements ContextEntityProvider {
-        public static final Codec<SummonEntity> INLINE_CODEC = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.byNameCodec().xmap(SummonEntity::new, SummonEntity::entityType);
         public static final MapCodec<SummonEntity> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.byNameCodec().fieldOf("entity_type").forGetter(SummonEntity::entityType),
-                ContextBlockPosProvider.REFERENCE_CODEC.optionalFieldOf("block_pos").forGetter(SummonEntity::blockPos),
+                ContextLocationProvider.REFERENCE_CODEC.optionalFieldOf("block_pos").forGetter(SummonEntity::position),
                 ContextEntityFunction.DIRECT_CODEC.listOf().optionalFieldOf("modifiers", List.of()).forGetter(SummonEntity::modifiers)
         ).apply(instance, SummonEntity::new));
-
-        public SummonEntity(EntityType<?> entityType) {
-            this(entityType, Optional.empty(), List.of());
-        }
 
         @Override
         public Entity get(LootContext context) {
             ServerLevel level = context.getLevel();
-            BlockPos blockPos = this.blockPos
+            BlockPos blockPos = this.position
                     .map(provider -> provider.value().getBlockPos(context))
-                    .orElseGet(() -> ContextBlockPosProvider.origin().getBlockPos(context));
+                    .orElseGet(() -> ContextLocationProvider.origin().getBlockPos(context));
             return this.entityType.spawn(level, blockPos, MobSpawnType.TRIGGERED);
         }
 

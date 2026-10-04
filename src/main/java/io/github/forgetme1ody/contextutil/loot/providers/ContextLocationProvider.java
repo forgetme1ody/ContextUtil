@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import io.github.forgetme1ody.contextutil.registries.BuiltInRegistries;
 import io.github.forgetme1ody.contextutil.registries.Registries;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.RegistryCodecs;
@@ -17,20 +18,22 @@ import net.minecraft.world.phys.Vec3;
 import java.util.Set;
 import java.util.function.Function;
 
-public interface ContextPositionProvider extends LootContextUser {
-    Codec<ContextPositionProvider> DIRECT_CODEC = Codec.lazyInitialized(() -> BuiltInRegistries.CONTEXT_POSITION_PROVIDER_TYPE.byNameCodec().dispatch(ContextPositionProvider::codec, Function.identity()));
-    Codec<Holder<ContextPositionProvider>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.CONTEXT_POSITION_PROVIDER, DIRECT_CODEC, true);
-    Codec<HolderSet<ContextPositionProvider>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.CONTEXT_POSITION_PROVIDER, DIRECT_CODEC, true);
+public interface ContextLocationProvider extends LootContextUser {
+    Codec<ContextLocationProvider> DIRECT_CODEC = Codec.lazyInitialized(() -> BuiltInRegistries.CONTEXT_LOCATION_PROVIDER_TYPE.byNameCodec().dispatch(ContextLocationProvider::codec, Function.identity()));
+    Codec<Holder<ContextLocationProvider>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.CONTEXT_LOCATION_PROVIDER, DIRECT_CODEC, true);
+    Codec<HolderSet<ContextLocationProvider>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.CONTEXT_LOCATION_PROVIDER, DIRECT_CODEC, true);
 
-    static ContextPositionProvider origin() {
+    static ContextLocationProvider origin() {
         return Origin.INSTANCE;
     }
 
     Vec3 getPosition(LootContext context);
 
-    MapCodec<? extends ContextPositionProvider> codec();
+    BlockPos getBlockPos(LootContext context);
 
-    record Origin() implements ContextPositionProvider {
+    MapCodec<? extends ContextLocationProvider> codec();
+
+    record Origin() implements ContextLocationProvider {
         public static final Origin INSTANCE = new Origin();
         public static final MapCodec<Origin> MAP_CODEC = MapCodec.unit(INSTANCE);
 
@@ -40,7 +43,12 @@ public interface ContextPositionProvider extends LootContextUser {
         }
 
         @Override
-        public MapCodec<? extends ContextPositionProvider> codec() {
+        public BlockPos getBlockPos(LootContext context) {
+            return BlockPos.containing(context.getParam(LootContextParams.ORIGIN));
+        }
+
+        @Override
+        public MapCodec<? extends ContextLocationProvider> codec() {
             return MAP_CODEC;
         }
 

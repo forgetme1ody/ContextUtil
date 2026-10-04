@@ -10,6 +10,22 @@ public final class ResolveCommand {
     }
 
     private static ArgumentBuilder<CommandSourceStack, ?> register(CommandBuildContext buildContext) {
-        return Commands.literal("resolve");
+        return Commands.literal("resolve")
+                .then(Commands.literal("entity")
+
+                )
+                .then(Commands.literal("item")
+
+                )
+                .then(Commands.literal("position")
+
+                )
+                .then(Commands.literal("block_pos")
+
+                )
+                .then(Commands.literal("sound")
+
+                )
+                ;
     }
 }

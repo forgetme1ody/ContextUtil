@@ -21,6 +21,18 @@ public interface ContextIntFunction extends LootContextUser {
     Codec<Holder<ContextIntFunction>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.CONTEXT_INT_FUNCTION, DIRECT_CODEC, true);
     Codec<HolderSet<ContextIntFunction>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.CONTEXT_INT_FUNCTION, DIRECT_CODEC, true);
 
+    static ContextIntFunction add(NumberProvider value) {
+        return new AddValue(value);
+    }
+
+    static ContextIntFunction mul(NumberProvider value) {
+        return new MultiplyValue(value);
+    }
+
+    static ContextIntFunction set(NumberProvider value) {
+        return new SetValue(value);
+    }
+
     int applyInt(LootContext context, int input);
 
     MapCodec<? extends ContextIntFunction> codec();

@@ -18,8 +18,9 @@ import java.util.function.Function;
 
 public interface ContextItemProvider extends LootContextUser {
     Codec<ContextItemProvider> DIRECT_CODEC = Codec.lazyInitialized(() -> {
-        Codec<ContextItemProvider> dispatched = BuiltInRegistries.CONTEXT_ITEM_PROVIDER_TYPE.byNameCodec().dispatch(ContextItemProvider::codec, Function.identity());
-        return Codec.either(Constant.INLINE_CODEC, dispatched).xmap(Either::unwrap, ContextItemProvider::wrap);
+//        Codec<ContextItemProvider> dispatched = BuiltInRegistries.CONTEXT_ITEM_PROVIDER_TYPE.byNameCodec().dispatch(ContextItemProvider::codec, Function.identity());
+//        return Codec.either(Constant.INLINE_CODEC, dispatched).xmap(Either::unwrap, ContextItemProvider::wrap);
+        return BuiltInRegistries.CONTEXT_ITEM_PROVIDER_TYPE.byNameCodec().dispatch(ContextItemProvider::codec, Function.identity());
     });
     Codec<Holder<ContextItemProvider>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.CONTEXT_ITEM_PROVIDER, DIRECT_CODEC, true);
     Codec<HolderSet<ContextItemProvider>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.CONTEXT_ITEM_PROVIDER, DIRECT_CODEC, true);
