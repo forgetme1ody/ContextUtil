@@ -1,27 +1,35 @@
 package io.github.forgetme1ody.contextutil.loot.functions;
 
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.github.forgetme1ody.contextutil.registries.BuiltInRegistries;
+import io.github.forgetme1ody.contextutil.registries.Registries;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.RegistryCodecs;
+import net.minecraft.resources.RegistryFileCodec;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootContextUser;
 import net.minecraft.world.level.storage.loot.providers.number.NumberProvider;
 import net.minecraft.world.level.storage.loot.providers.number.NumberProviders;
 
-public interface LootNumberFunction extends LootContextUser {
+import java.util.function.Function;
 
-    static LootNumberFunction addValue(NumberProvider value) {
+public interface LootNumberFunction extends LootContextUser {
+    Codec<LootNumberFunction> DIRECT_CODEC = Codec.lazyInitialized(() -> BuiltInRegistries.NUMBER_MODIFIER_TYPE.byNameCodec().dispatch(LootNumberFunction::codec, Function.identity()));
+    Codec<Holder<LootNumberFunction>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.NUMBER_MODIFIER, DIRECT_CODEC, true);
+    Codec<HolderSet<LootNumberFunction>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.NUMBER_MODIFIER, DIRECT_CODEC, true);
+
+    static LootNumberFunction add(NumberProvider value) {
         return new AddValue(value);
     }
 
-    static LootNumberFunction multiplyValue(NumberProvider factor) {
+    static LootNumberFunction mul(NumberProvider factor) {
         return new MultiplyValue(factor);
     }
 
-    static LootNumberFunction removeBinomial(NumberProvider chance) {
-        return new RemoveBinomial(chance);
-    }
-
-    static LootNumberFunction setValue(NumberProvider value) {
+    static LootNumberFunction set(NumberProvider value) {
         return new SetValue(value);
     }
 
