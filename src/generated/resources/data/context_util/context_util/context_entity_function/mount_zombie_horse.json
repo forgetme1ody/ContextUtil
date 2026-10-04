@@ -1,0 +1,7 @@
+{
+  "type": "context_util:mount",
+  "vehicle": {
+    "type": "context_util:summon_entity",
+    "entity_type": "minecraft:zombie_horse"
+  }
+}
