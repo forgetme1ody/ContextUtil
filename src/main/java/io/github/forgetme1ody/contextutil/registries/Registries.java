@@ -16,7 +16,7 @@ public final class Registries {
     public static final ResourceKey<Registry<MapCodec<? extends ContextBlockPosProvider>>> CONTEXT_BLOCK_POS_PROVIDER_TYPE = key("context_block_pos_provider_type");
     public static final ResourceKey<Registry<MapCodec<? extends ContextSoundProvider>>> CONTEXT_SOUND_PROVIDER_TYPE = key("context_sound_provider_type");
     public static final ResourceKey<Registry<MapCodec<? extends ContextEntityFunction>>> CONTEXT_ENTITY_FUNCTION_TYPE = key("context_entity_function_type");
-    public static final ResourceKey<Registry<MapCodec<? extends ContextIntFunction>>> CONTEXT_INT_FUNCTION_TYPE = key("context_float_function_type");
+    public static final ResourceKey<Registry<MapCodec<? extends ContextIntFunction>>> CONTEXT_INT_FUNCTION_TYPE = key("context_int_function_type");
     public static final ResourceKey<Registry<MapCodec<? extends ContextFloatFunction>>> CONTEXT_FLOAT_FUNCTION_TYPE = key("context_float_function_type");
     public static final ResourceKey<Registry<ContextEntityProvider>> CONTEXT_ENTITY_PROVIDER = key("context_entity_provider");
     public static final ResourceKey<Registry<ContextItemProvider>> CONTEXT_ITEM_PROVIDER = key("context_item_provider");

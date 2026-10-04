@@ -5,11 +5,11 @@ import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
-public final class ComputeCommand {
-    private ComputeCommand() {
+public final class ResolveCommand {
+    private ResolveCommand() {
     }
 
     private static ArgumentBuilder<CommandSourceStack, ?> register(CommandBuildContext buildContext) {
-        return Commands.literal("compute");
+        return Commands.literal("resolve");
     }
 }

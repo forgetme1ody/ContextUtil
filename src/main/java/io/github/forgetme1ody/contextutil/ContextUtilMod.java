@@ -3,7 +3,7 @@ package io.github.forgetme1ody.contextutil;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.logging.LogUtils;
-import io.github.forgetme1ody.contextutil.commands.ModifyCommand;
+import io.github.forgetme1ody.contextutil.commands.ApplyCommand;
 import io.github.forgetme1ody.contextutil.data.EntityModifiers;
 import io.github.forgetme1ody.contextutil.loot.functions.ContextEntityFunction;
 import io.github.forgetme1ody.contextutil.loot.functions.ContextFloatFunction;
@@ -114,7 +114,7 @@ public class ContextUtilMod {
         LiteralArgumentBuilder<CommandSourceStack> commandBuilder = Commands.literal(MOD_ID).requires(stack -> stack.hasPermission(2));
         dispatcher.register(
                 commandBuilder
-                        .then(ModifyCommand.register(buildContext))
+                        .then(ApplyCommand.register(buildContext))
         );
     }
 

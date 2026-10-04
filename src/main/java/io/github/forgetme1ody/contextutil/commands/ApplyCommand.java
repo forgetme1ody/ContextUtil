@@ -22,16 +22,16 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 
 import java.util.Collection;
 
-public final class ModifyCommand {
+public final class ApplyCommand {
     private static final SimpleCommandExceptionType ERROR_TARGET_NO_CHANGES = new SimpleCommandExceptionType(
             Component.translatable("commands.contextutil.modify.entity.target.no_changes")
     );
 
-    private ModifyCommand() {
+    private ApplyCommand() {
     }
 
     public static ArgumentBuilder<CommandSourceStack, ?> register(CommandBuildContext buildContext) {
-        return Commands.literal("modify")
+        return Commands.literal("apply")
                 .then(Commands.literal("entity")
                         .then(Commands.argument("modifier", ResourceArgument.resource(buildContext, Registries.CONTEXT_ENTITY_FUNCTION))
                                 .then(Commands.argument("target", EntityArgument.entities())
