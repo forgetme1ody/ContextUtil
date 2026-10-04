@@ -3,8 +3,8 @@ package io.github.forgetme1ody.contextutil.loot.functions;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import io.github.forgetme1ody.contextutil.loot.providers.EntityProvider;
-import io.github.forgetme1ody.contextutil.loot.providers.LocationProvider;
+import io.github.forgetme1ody.contextutil.loot.providers.ContextEntityProvider;
+import io.github.forgetme1ody.contextutil.loot.providers.ContextPositionProvider;
 import io.github.forgetme1ody.contextutil.registries.Registries;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
@@ -31,12 +31,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-public interface LootEntityFunction extends LootContextUser {
-    Codec<LootEntityFunction> DIRECT_CODEC = Codec.lazyInitialized(() -> io.github.forgetme1ody.contextutil.registries.BuiltInRegistries.ENTITY_MODIFIER_TYPE.byNameCodec().dispatch(LootEntityFunction::codec, Function.identity()));
-    Codec<Holder<LootEntityFunction>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.ENTITY_MODIFIER, DIRECT_CODEC, true);
-    Codec<HolderSet<LootEntityFunction>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.ENTITY_MODIFIER, DIRECT_CODEC, true);
+public interface ContextEntityFunction extends LootContextUser {
+    Codec<ContextEntityFunction> DIRECT_CODEC = Codec.lazyInitialized(() -> io.github.forgetme1ody.contextutil.registries.BuiltInRegistries.CONTEXT_ENTITY_FUNCTION_TYPE.byNameCodec().dispatch(ContextEntityFunction::codec, Function.identity()));
+    Codec<Holder<ContextEntityFunction>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.CONTEXT_ENTITY_FUNCTION, DIRECT_CODEC, true);
+    Codec<HolderSet<ContextEntityFunction>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.CONTEXT_ENTITY_FUNCTION, DIRECT_CODEC, true);
 
-    static LootEntityFunction damageEntity(
+    static ContextEntityFunction damageEntity(
             Holder<DamageType> damageType,
             NumberProvider damageAmount
     ) {
@@ -49,10 +49,10 @@ public interface LootEntityFunction extends LootContextUser {
         );
     }
 
-    static LootEntityFunction damageEntity(
+    static ContextEntityFunction damageEntity(
             Holder<DamageType> damageType,
             NumberProvider damageAmount,
-            @Nullable Holder<EntityProvider> directEntity
+            @Nullable Holder<ContextEntityProvider> directEntity
     ) {
         return damageEntity(
                 damageType,
@@ -63,11 +63,11 @@ public interface LootEntityFunction extends LootContextUser {
         );
     }
 
-    static LootEntityFunction damageEntity(
+    static ContextEntityFunction damageEntity(
             Holder<DamageType> damageType,
             NumberProvider damageAmount,
-            @Nullable Holder<EntityProvider> directEntity,
-            @Nullable Holder<EntityProvider> causingEntity
+            @Nullable Holder<ContextEntityProvider> directEntity,
+            @Nullable Holder<ContextEntityProvider> causingEntity
     ) {
         return damageEntity(
                 damageType,
@@ -78,12 +78,12 @@ public interface LootEntityFunction extends LootContextUser {
         );
     }
 
-    static LootEntityFunction damageEntity(
+    static ContextEntityFunction damageEntity(
             Holder<DamageType> damageType,
             NumberProvider damageAmount,
-            @Nullable Holder<EntityProvider> directEntity,
-            @Nullable Holder<EntityProvider> causingEntity,
-            @Nullable Holder<LocationProvider> damageSourcePosition
+            @Nullable Holder<ContextEntityProvider> directEntity,
+            @Nullable Holder<ContextEntityProvider> causingEntity,
+            @Nullable Holder<ContextPositionProvider> damageSourcePosition
     ) {
         return new Damage(
                 damageType,
@@ -94,20 +94,20 @@ public interface LootEntityFunction extends LootContextUser {
         );
     }
 
-    static LootEntityFunction applyMobEffect(
+    static ContextEntityFunction applyMobEffect(
             Holder<MobEffect> effect
     ) {
         return new ApplyMobEffect(effect, null, null);
     }
 
-    static LootEntityFunction applyMobEffect(
+    static ContextEntityFunction applyMobEffect(
             Holder<MobEffect> effect,
             @Nullable NumberProvider duration
     ) {
         return new ApplyMobEffect(effect, Optional.ofNullable(duration), null);
     }
 
-    static LootEntityFunction applyMobEffect(
+    static ContextEntityFunction applyMobEffect(
             Holder<MobEffect> effect,
             @Nullable NumberProvider duration,
             @Nullable NumberProvider amplifier
@@ -115,48 +115,48 @@ public interface LootEntityFunction extends LootContextUser {
         return new ApplyMobEffect(effect, Optional.ofNullable(duration), Optional.ofNullable(amplifier));
     }
 
-    static LootEntityFunction ignite(NumberProvider duration) {
+    static ContextEntityFunction ignite(NumberProvider duration) {
         return new Ignite(duration);
     }
 
-    static LootEntityFunction setItemSlot(EquipmentSlot slot, Item item) {
+    static ContextEntityFunction setItemSlot(EquipmentSlot slot, Item item) {
         return new SetItemSlot(slot, new ItemStack(item));
     }
 
-    static LootEntityFunction setItemSlot(EquipmentSlot slot, ItemStack item) {
+    static ContextEntityFunction setItemSlot(EquipmentSlot slot, ItemStack item) {
         return new SetItemSlot(slot, item);
     }
 
-    static LootEntityFunction mount(EntityProvider mount) {
+    static ContextEntityFunction mount(ContextEntityProvider mount) {
         return new Mount(Holder.direct(mount));
     }
 
-    static LootEntityFunction mount(Holder<EntityProvider> mount) {
+    static ContextEntityFunction mount(Holder<ContextEntityProvider> mount) {
         return new Mount(mount);
     }
 
-    static LootEntityFunction dismount() {
+    static ContextEntityFunction dismount() {
         return Dismount.INSTANCE;
     }
 
     void apply(LootContext context, Entity entity);
 
-    MapCodec<? extends LootEntityFunction> codec();
+    MapCodec<? extends ContextEntityFunction> codec();
 
-    record AllOf(List<LootEntityFunction> modifiers) implements LootEntityFunction {
+    record AllOf(List<ContextEntityFunction> modifiers) implements ContextEntityFunction {
         public static final MapCodec<AllOf> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-                LootEntityFunction.DIRECT_CODEC.listOf().fieldOf("modifiers").forGetter(AllOf::modifiers)
+                ContextEntityFunction.DIRECT_CODEC.listOf().fieldOf("modifiers").forGetter(AllOf::modifiers)
         ).apply(instance, AllOf::new));
 
         @Override
         public void apply(LootContext context, Entity entity) {
-            for (LootEntityFunction modifier : this.modifiers) {
+            for (ContextEntityFunction modifier : this.modifiers) {
                 modifier.apply(context, entity);
             }
         }
 
         @Override
-        public MapCodec<? extends LootEntityFunction> codec() {
+        public MapCodec<? extends ContextEntityFunction> codec() {
             return MAP_CODEC;
         }
     }
@@ -164,16 +164,16 @@ public interface LootEntityFunction extends LootContextUser {
     record Damage(
             Holder<DamageType> damageType,
             NumberProvider amount,
-            Optional<Holder<EntityProvider>> directEntity,
-            Optional<Holder<EntityProvider>> causingEntity,
-            Optional<Holder<LocationProvider>> damageSourcePosition
-    ) implements LootEntityFunction {
+            Optional<Holder<ContextEntityProvider>> directEntity,
+            Optional<Holder<ContextEntityProvider>> causingEntity,
+            Optional<Holder<ContextPositionProvider>> damageSourcePosition
+    ) implements ContextEntityFunction {
         public static final MapCodec<Damage> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 DamageType.CODEC.fieldOf("damage_type").forGetter(Damage::damageType),
                 NumberProviders.CODEC.fieldOf("amount").forGetter(Damage::amount),
-                EntityProvider.REFERENCE_CODEC.optionalFieldOf("direct_entity").forGetter(Damage::directEntity),
-                EntityProvider.REFERENCE_CODEC.optionalFieldOf("causing_entity").forGetter(Damage::directEntity),
-                LocationProvider.REFERENCE_CODEC.optionalFieldOf("damage_source_position").forGetter(Damage::damageSourcePosition)
+                ContextEntityProvider.REFERENCE_CODEC.optionalFieldOf("direct_entity").forGetter(Damage::directEntity),
+                ContextEntityProvider.REFERENCE_CODEC.optionalFieldOf("causing_entity").forGetter(Damage::directEntity),
+                ContextPositionProvider.REFERENCE_CODEC.optionalFieldOf("damage_source_position").forGetter(Damage::damageSourcePosition)
         ).apply(instance, Damage::new));
 
         @Override
@@ -190,7 +190,7 @@ public interface LootEntityFunction extends LootContextUser {
         }
 
         @Override
-        public MapCodec<? extends LootEntityFunction> codec() {
+        public MapCodec<? extends ContextEntityFunction> codec() {
             return null;
         }
     }
@@ -199,7 +199,7 @@ public interface LootEntityFunction extends LootContextUser {
             Holder<MobEffect> effect,
             Optional<NumberProvider> duration,
             Optional<NumberProvider> amplifier
-    ) implements LootEntityFunction {
+    ) implements ContextEntityFunction {
         public static final MapCodec<ApplyMobEffect> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 BuiltInRegistries.MOB_EFFECT.holderByNameCodec().fieldOf("effect").forGetter(ApplyMobEffect::effect),
                 NumberProviders.CODEC.optionalFieldOf("duration").forGetter(ApplyMobEffect::duration),
@@ -219,12 +219,12 @@ public interface LootEntityFunction extends LootContextUser {
         }
 
         @Override
-        public MapCodec<? extends LootEntityFunction> codec() {
+        public MapCodec<? extends ContextEntityFunction> codec() {
             return MAP_CODEC;
         }
     }
 
-    record SetItemSlot(EquipmentSlot slot, ItemStack item) implements LootEntityFunction {
+    record SetItemSlot(EquipmentSlot slot, ItemStack item) implements ContextEntityFunction {
         public static final MapCodec<SetItemSlot> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 EquipmentSlot.CODEC.fieldOf("slot").forGetter(SetItemSlot::slot),
                 ItemStack.OPTIONAL_CODEC.fieldOf("item").forGetter(SetItemSlot::item)
@@ -238,12 +238,12 @@ public interface LootEntityFunction extends LootContextUser {
         }
 
         @Override
-        public MapCodec<? extends LootEntityFunction> codec() {
+        public MapCodec<? extends ContextEntityFunction> codec() {
             return MAP_CODEC;
         }
     }
 
-    record Ignite(NumberProvider duration) implements LootEntityFunction {
+    record Ignite(NumberProvider duration) implements ContextEntityFunction {
         public static final MapCodec<Ignite> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 NumberProviders.CODEC.fieldOf("duration").forGetter(Ignite::duration)
         ).apply(instance, Ignite::new));
@@ -254,16 +254,16 @@ public interface LootEntityFunction extends LootContextUser {
         }
 
         @Override
-        public MapCodec<? extends LootEntityFunction> codec() {
+        public MapCodec<? extends ContextEntityFunction> codec() {
             return MAP_CODEC;
         }
     }
 
     record Mount(
-            Holder<EntityProvider> vehicle
-    ) implements LootEntityFunction {
+            Holder<ContextEntityProvider> vehicle
+    ) implements ContextEntityFunction {
         public static final MapCodec<Mount> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-                EntityProvider.REFERENCE_CODEC.fieldOf("vehicle").forGetter(Mount::vehicle)
+                ContextEntityProvider.REFERENCE_CODEC.fieldOf("vehicle").forGetter(Mount::vehicle)
         ).apply(instance, Mount::new));
 
         @Override
@@ -273,12 +273,12 @@ public interface LootEntityFunction extends LootContextUser {
         }
 
         @Override
-        public MapCodec<? extends LootEntityFunction> codec() {
+        public MapCodec<? extends ContextEntityFunction> codec() {
             return MAP_CODEC;
         }
     }
 
-    record Dismount() implements LootEntityFunction {
+    record Dismount() implements ContextEntityFunction {
         public static final Dismount INSTANCE = new Dismount();
         public static final MapCodec<Dismount> MAP_CODEC = MapCodec.unit(INSTANCE);
 
@@ -288,7 +288,7 @@ public interface LootEntityFunction extends LootContextUser {
         }
 
         @Override
-        public MapCodec<? extends LootEntityFunction> codec() {
+        public MapCodec<? extends ContextEntityFunction> codec() {
             return MAP_CODEC;
         }
     }

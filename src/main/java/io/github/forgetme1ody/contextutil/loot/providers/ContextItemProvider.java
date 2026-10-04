@@ -16,27 +16,27 @@ import net.minecraft.world.level.storage.loot.LootContextUser;
 
 import java.util.function.Function;
 
-public interface ItemProvider extends LootContextUser {
-    Codec<ItemProvider> DIRECT_CODEC = Codec.lazyInitialized(() -> {
-        Codec<ItemProvider> dispatched = BuiltInRegistries.CONTEXT_ITEM_PROVIDER_TYPE.byNameCodec().dispatch(ItemProvider::codec, Function.identity());
-        return Codec.either(Constant.INLINE_CODEC, dispatched).xmap(Either::unwrap, ItemProvider::wrap);
+public interface ContextItemProvider extends LootContextUser {
+    Codec<ContextItemProvider> DIRECT_CODEC = Codec.lazyInitialized(() -> {
+        Codec<ContextItemProvider> dispatched = BuiltInRegistries.CONTEXT_ITEM_PROVIDER_TYPE.byNameCodec().dispatch(ContextItemProvider::codec, Function.identity());
+        return Codec.either(Constant.INLINE_CODEC, dispatched).xmap(Either::unwrap, ContextItemProvider::wrap);
     });
-    Codec<Holder<ItemProvider>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.CONTEXT_ITEM_PROVIDER, DIRECT_CODEC, true);
-    Codec<HolderSet<ItemProvider>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.CONTEXT_ITEM_PROVIDER, DIRECT_CODEC, true);
+    Codec<Holder<ContextItemProvider>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.CONTEXT_ITEM_PROVIDER, DIRECT_CODEC, true);
+    Codec<HolderSet<ContextItemProvider>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.CONTEXT_ITEM_PROVIDER, DIRECT_CODEC, true);
 
-    static ItemProvider constant(ItemStack value) {
+    static ContextItemProvider constant(ItemStack value) {
         return new Constant(value);
     }
 
-    private static Either<Constant, ItemProvider> wrap(ItemProvider provider) {
+    private static Either<Constant, ContextItemProvider> wrap(ContextItemProvider provider) {
         return provider instanceof Constant constant ? Either.left(constant) : Either.right(provider);
     }
 
     ItemStack get(LootContext context);
 
-    MapCodec<? extends ItemProvider> codec();
+    MapCodec<? extends ContextItemProvider> codec();
 
-    record Constant(ItemStack value) implements ItemProvider {
+    record Constant(ItemStack value) implements ContextItemProvider {
         public static final Codec<Constant> INLINE_CODEC = ItemStack.CODEC.xmap(Constant::new, Constant::value);
         public static final MapCodec<Constant> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 ItemStack.CODEC.fieldOf("value").forGetter(Constant::value)
@@ -48,7 +48,7 @@ public interface ItemProvider extends LootContextUser {
         }
 
         @Override
-        public MapCodec<? extends ItemProvider> codec() {
+        public MapCodec<? extends ContextItemProvider> codec() {
             return MAP_CODEC;
         }
     }

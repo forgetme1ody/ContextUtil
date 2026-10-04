@@ -1,8 +1,0 @@
-{
-  "type": "context_util:set_item_slot",
-  "item": {
-    "count": 1,
-    "id": "minecraft:iron_helmet"
-  },
-  "slot": "head"
-}

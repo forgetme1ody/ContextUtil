@@ -5,12 +5,10 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.logging.LogUtils;
 import io.github.forgetme1ody.contextutil.commands.ModifyCommand;
 import io.github.forgetme1ody.contextutil.data.EntityModifiers;
-import io.github.forgetme1ody.contextutil.loot.functions.LootEntityFunction;
-import io.github.forgetme1ody.contextutil.loot.functions.LootNumberFunction;
-import io.github.forgetme1ody.contextutil.loot.providers.EntityProvider;
-import io.github.forgetme1ody.contextutil.loot.providers.ItemProvider;
-import io.github.forgetme1ody.contextutil.loot.providers.LocationProvider;
-import io.github.forgetme1ody.contextutil.loot.providers.SoundProvider;
+import io.github.forgetme1ody.contextutil.loot.functions.ContextEntityFunction;
+import io.github.forgetme1ody.contextutil.loot.functions.ContextFloatFunction;
+import io.github.forgetme1ody.contextutil.loot.functions.ContextIntFunction;
+import io.github.forgetme1ody.contextutil.loot.providers.*;
 import io.github.forgetme1ody.contextutil.registries.BuiltInRegistries;
 import io.github.forgetme1ody.contextutil.registries.Registries;
 import net.minecraft.commands.CommandBuildContext;
@@ -50,51 +48,63 @@ public class ContextUtilMod {
     }
 
     private void registerRegistries(NewRegistryEvent event) {
-        event.register(BuiltInRegistries.ENTITY_MODIFIER_TYPE);
-        event.register(BuiltInRegistries.NUMBER_MODIFIER_TYPE);
+        event.register(BuiltInRegistries.CONTEXT_INT_MODIFIER_TYPE);
+        event.register(BuiltInRegistries.CONTEXT_FLOAT_MODIFIER_TYPE);
+        event.register(BuiltInRegistries.CONTEXT_ENTITY_FUNCTION_TYPE);
         event.register(BuiltInRegistries.CONTEXT_ENTITY_PROVIDER_TYPE);
         event.register(BuiltInRegistries.CONTEXT_ITEM_PROVIDER_TYPE);
-        event.register(BuiltInRegistries.CONTEXT_LOCATION_PROVIDER_TYPE);
+        event.register(BuiltInRegistries.CONTEXT_POSITION_PROVIDER_TYPE);
+        event.register(BuiltInRegistries.CONTEXT_BLOCK_POS_PROVIDER_TYPE);
         event.register(BuiltInRegistries.CONTEXT_SOUND_PROVIDER_TYPE);
     }
 
     private void registerDataPackRegistries(DataPackRegistryEvent.NewRegistry event) {
-        event.dataPackRegistry(Registries.ENTITY_MODIFIER, LootEntityFunction.DIRECT_CODEC, LootEntityFunction.DIRECT_CODEC);
-        event.dataPackRegistry(Registries.NUMBER_MODIFIER, LootNumberFunction.DIRECT_CODEC, LootNumberFunction.DIRECT_CODEC);
-        event.dataPackRegistry(Registries.CONTEXT_ENTITY_PROVIDER, EntityProvider.DIRECT_CODEC, EntityProvider.DIRECT_CODEC);
-        event.dataPackRegistry(Registries.CONTEXT_ITEM_PROVIDER, ItemProvider.DIRECT_CODEC, ItemProvider.DIRECT_CODEC);
-        event.dataPackRegistry(Registries.CONTEXT_LOCATION_PROVIDER, LocationProvider.DIRECT_CODEC, LocationProvider.DIRECT_CODEC);
-        event.dataPackRegistry(Registries.CONTEXT_SOUND_PROVIDER, SoundProvider.DIRECT_CODEC, SoundProvider.DIRECT_CODEC);
+        event.dataPackRegistry(Registries.CONTEXT_ENTITY_PROVIDER, ContextEntityProvider.DIRECT_CODEC, ContextEntityProvider.DIRECT_CODEC);
+        event.dataPackRegistry(Registries.CONTEXT_ITEM_PROVIDER, ContextItemProvider.DIRECT_CODEC, ContextItemProvider.DIRECT_CODEC);
+        event.dataPackRegistry(Registries.CONTEXT_POSITION_PROVIDER, ContextPositionProvider.DIRECT_CODEC, ContextPositionProvider.DIRECT_CODEC);
+        event.dataPackRegistry(Registries.CONTEXT_BLOCK_POS_PROVIDER, ContextBlockPosProvider.DIRECT_CODEC, ContextBlockPosProvider.DIRECT_CODEC);
+        event.dataPackRegistry(Registries.CONTEXT_SOUND_PROVIDER, ContextSoundProvider.DIRECT_CODEC, ContextSoundProvider.DIRECT_CODEC);
+        event.dataPackRegistry(Registries.CONTEXT_ENTITY_FUNCTION, ContextEntityFunction.DIRECT_CODEC, ContextEntityFunction.DIRECT_CODEC);
+        event.dataPackRegistry(Registries.CONTEXT_INT_FUNCTION, ContextIntFunction.DIRECT_CODEC, ContextIntFunction.DIRECT_CODEC);
+        event.dataPackRegistry(Registries.CONTEXT_FLOAT_FUNCTION, ContextFloatFunction.DIRECT_CODEC, ContextFloatFunction.DIRECT_CODEC);
     }
 
     private void registerContents(RegisterEvent event) {
-        event.register(Registries.ENTITY_MODIFIER_TYPE, context -> {
-            context.register(id("all_of"), LootEntityFunction.AllOf.MAP_CODEC);
-            context.register(id("damage"), LootEntityFunction.Damage.MAP_CODEC);
-            context.register(id("apply_mob_effect"), LootEntityFunction.ApplyMobEffect.MAP_CODEC);
-            context.register(id("set_item_slot"), LootEntityFunction.SetItemSlot.MAP_CODEC);
-            context.register(id("ignite"), LootEntityFunction.Ignite.MAP_CODEC);
-            context.register(id("mount"), LootEntityFunction.Mount.MAP_CODEC);
-            context.register(id("dismount"), LootEntityFunction.Dismount.MAP_CODEC);
-        });
-        event.register(Registries.NUMBER_MODIFIER_TYPE, context -> {
-            context.register(id("add"), LootNumberFunction.AddValue.MAP_CODEC);
-            context.register(id("mul"), LootNumberFunction.MultiplyValue.MAP_CODEC);
-            context.register(id("set"), LootNumberFunction.SetValue.MAP_CODEC);
-        });
         event.register(Registries.CONTEXT_ENTITY_PROVIDER_TYPE, context -> {
-            context.register(id("this_entity"), EntityProvider.ThisEntity.MAP_CODEC);
-            context.register(id("attacking_entity"), EntityProvider.AttackingEntity.MAP_CODEC);
-            context.register(id("direct_attacking_entity"), EntityProvider.DirectAttackingEntity.MAP_CODEC);
+            context.register(id("this_entity"), ContextEntityProvider.ThisEntity.MAP_CODEC);
+            context.register(id("attacking_entity"), ContextEntityProvider.AttackingEntity.MAP_CODEC);
+            context.register(id("direct_attacking_entity"), ContextEntityProvider.DirectAttackingEntity.MAP_CODEC);
         });
         event.register(Registries.CONTEXT_ITEM_PROVIDER_TYPE, context -> {
-            context.register(id("constant"), ItemProvider.Constant.MAP_CODEC);
+            context.register(id("constant"), ContextItemProvider.Constant.MAP_CODEC);
         });
-        event.register(Registries.CONTEXT_LOCATION_PROVIDER_TYPE, context -> {
-            context.register(id("origin"), LocationProvider.Origin.MAP_CODEC);
+        event.register(Registries.CONTEXT_POSITION_PROVIDER_TYPE, context -> {
+            context.register(id("origin"), ContextPositionProvider.Origin.MAP_CODEC);
+        });
+        event.register(Registries.CONTEXT_BLOCK_POS_PROVIDER_TYPE, context -> {
+            context.register(id("origin"), ContextBlockPosProvider.Origin.MAP_CODEC);
         });
         event.register(Registries.CONTEXT_SOUND_PROVIDER_TYPE, context -> {
-            context.register(id("constant"), SoundProvider.Constant.MAP_CODEC);
+            context.register(id("constant"), ContextSoundProvider.Constant.MAP_CODEC);
+        });
+        event.register(Registries.CONTEXT_ENTITY_FUNCTION_TYPE, context -> {
+            context.register(id("all_of"), ContextEntityFunction.AllOf.MAP_CODEC);
+            context.register(id("damage"), ContextEntityFunction.Damage.MAP_CODEC);
+            context.register(id("apply_mob_effect"), ContextEntityFunction.ApplyMobEffect.MAP_CODEC);
+            context.register(id("set_item_slot"), ContextEntityFunction.SetItemSlot.MAP_CODEC);
+            context.register(id("ignite"), ContextEntityFunction.Ignite.MAP_CODEC);
+            context.register(id("mount"), ContextEntityFunction.Mount.MAP_CODEC);
+            context.register(id("dismount"), ContextEntityFunction.Dismount.MAP_CODEC);
+        });
+        event.register(Registries.CONTEXT_INT_FUNCTION_TYPE, context -> {
+            context.register(id("add"), ContextIntFunction.AddValue.MAP_CODEC);
+            context.register(id("mul"), ContextIntFunction.MultiplyValue.MAP_CODEC);
+            context.register(id("set"), ContextIntFunction.SetValue.MAP_CODEC);
+        });
+        event.register(Registries.CONTEXT_FLOAT_FUNCTION_TYPE, context -> {
+            context.register(id("add"), ContextFloatFunction.AddValue.MAP_CODEC);
+            context.register(id("mul"), ContextFloatFunction.MultiplyValue.MAP_CODEC);
+            context.register(id("set"), ContextFloatFunction.SetValue.MAP_CODEC);
         });
     }
 
@@ -114,7 +124,7 @@ public class ContextUtilMod {
         PackOutput output = generator.getPackOutput();
         if (event.includeServer()) {
             RegistrySetBuilder builder = new RegistrySetBuilder()
-                    .add(Registries.ENTITY_MODIFIER, EntityModifiers::bootstrap);
+                    .add(Registries.CONTEXT_ENTITY_FUNCTION, EntityModifiers::bootstrap);
             event.createDatapackRegistryObjects(builder);
         }
     }

@@ -16,27 +16,27 @@ import net.minecraft.world.level.storage.loot.LootContextUser;
 
 import java.util.function.Function;
 
-public interface SoundProvider extends LootContextUser {
-    Codec<SoundProvider> DIRECT_CODEC = Codec.lazyInitialized(() -> {
-        Codec<SoundProvider> dispatched = BuiltInRegistries.CONTEXT_SOUND_PROVIDER_TYPE.byNameCodec().dispatch(SoundProvider::codec, Function.identity());
-        return Codec.either(Constant.INLINE_CODEC, dispatched).xmap(Either::unwrap, SoundProvider::wrap);
+public interface ContextSoundProvider extends LootContextUser {
+    Codec<ContextSoundProvider> DIRECT_CODEC = Codec.lazyInitialized(() -> {
+        Codec<ContextSoundProvider> dispatched = BuiltInRegistries.CONTEXT_SOUND_PROVIDER_TYPE.byNameCodec().dispatch(ContextSoundProvider::codec, Function.identity());
+        return Codec.either(Constant.INLINE_CODEC, dispatched).xmap(Either::unwrap, ContextSoundProvider::wrap);
     });
-    Codec<Holder<SoundProvider>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.CONTEXT_SOUND_PROVIDER, DIRECT_CODEC, true);
-    Codec<HolderSet<SoundProvider>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.CONTEXT_SOUND_PROVIDER, DIRECT_CODEC, true);
+    Codec<Holder<ContextSoundProvider>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.CONTEXT_SOUND_PROVIDER, DIRECT_CODEC, true);
+    Codec<HolderSet<ContextSoundProvider>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.CONTEXT_SOUND_PROVIDER, DIRECT_CODEC, true);
 
-    static SoundProvider constant(Holder<SoundEvent> value) {
+    static ContextSoundProvider constant(Holder<SoundEvent> value) {
         return new Constant(value);
     }
 
-    private static Either<Constant, SoundProvider> wrap(SoundProvider provider) {
+    private static Either<Constant, ContextSoundProvider> wrap(ContextSoundProvider provider) {
         return provider instanceof Constant constant ? Either.left(constant) : Either.right(provider);
     }
 
     Holder<SoundEvent> get(LootContext context);
 
-    MapCodec<? extends SoundProvider> codec();
+    MapCodec<? extends ContextSoundProvider> codec();
 
-    record Constant(Holder<SoundEvent> value) implements SoundProvider {
+    record Constant(Holder<SoundEvent> value) implements ContextSoundProvider {
         public static final Codec<Constant> INLINE_CODEC = SoundEvent.CODEC.xmap(Constant::new, Constant::value);
         public static final MapCodec<Constant> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 SoundEvent.CODEC.fieldOf("value").forGetter(Constant::value)
@@ -48,7 +48,7 @@ public interface SoundProvider extends LootContextUser {
         }
 
         @Override
-        public MapCodec<? extends SoundProvider> codec() {
+        public MapCodec<? extends ContextSoundProvider> codec() {
             return MAP_CODEC;
         }
     }

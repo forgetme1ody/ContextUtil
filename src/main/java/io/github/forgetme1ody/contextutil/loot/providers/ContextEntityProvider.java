@@ -4,7 +4,7 @@ import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import io.github.forgetme1ody.contextutil.loot.functions.LootEntityFunction;
+import io.github.forgetme1ody.contextutil.loot.functions.ContextEntityFunction;
 import io.github.forgetme1ody.contextutil.registries.BuiltInRegistries;
 import io.github.forgetme1ody.contextutil.registries.Registries;
 import net.minecraft.core.BlockPos;
@@ -26,44 +26,44 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-public interface EntityProvider extends LootContextUser {
-    Codec<EntityProvider> DIRECT_CODEC = Codec.lazyInitialized(() -> {
-        Codec<EntityProvider> dispatched = BuiltInRegistries.CONTEXT_ENTITY_PROVIDER_TYPE.byNameCodec().dispatch(EntityProvider::codec, Function.identity());
-        return Codec.either(SummonEntity.INLINE_CODEC, dispatched).xmap(Either::unwrap, EntityProvider::wrap);
+public interface ContextEntityProvider extends LootContextUser {
+    Codec<ContextEntityProvider> DIRECT_CODEC = Codec.lazyInitialized(() -> {
+        Codec<ContextEntityProvider> dispatched = BuiltInRegistries.CONTEXT_ENTITY_PROVIDER_TYPE.byNameCodec().dispatch(ContextEntityProvider::codec, Function.identity());
+        return Codec.either(SummonEntity.INLINE_CODEC, dispatched).xmap(Either::unwrap, ContextEntityProvider::wrap);
     });
-    Codec<Holder<EntityProvider>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.CONTEXT_ENTITY_PROVIDER, DIRECT_CODEC, true);
-    Codec<HolderSet<EntityProvider>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.CONTEXT_ENTITY_PROVIDER, DIRECT_CODEC, true);
+    Codec<Holder<ContextEntityProvider>> REFERENCE_CODEC = RegistryFileCodec.create(Registries.CONTEXT_ENTITY_PROVIDER, DIRECT_CODEC, true);
+    Codec<HolderSet<ContextEntityProvider>> LIST_CODEC = RegistryCodecs.homogeneousList(Registries.CONTEXT_ENTITY_PROVIDER, DIRECT_CODEC, true);
 
-    static EntityProvider thisEntity() {
+    static ContextEntityProvider thisEntity() {
         return ThisEntity.INSTANCE;
     }
 
-    static EntityProvider attackingEntity() {
+    static ContextEntityProvider attackingEntity() {
         return ThisEntity.INSTANCE;
     }
 
-    static EntityProvider directAttackingEntity() {
+    static ContextEntityProvider directAttackingEntity() {
         return ThisEntity.INSTANCE;
     }
 
-    private static Either<SummonEntity, EntityProvider> wrap(EntityProvider provider) {
+    private static Either<SummonEntity, ContextEntityProvider> wrap(ContextEntityProvider provider) {
         return provider instanceof SummonEntity summonEntity ? Either.left(summonEntity) : Either.right(provider);
     }
 
     Entity get(LootContext context);
 
-    MapCodec<? extends EntityProvider> codec();
+    MapCodec<? extends ContextEntityProvider> codec();
 
     record SummonEntity(
             EntityType<?> entityType,
-            Optional<Holder<LocationProvider>> position,
-            List<LootEntityFunction> modifiers
-    ) implements EntityProvider {
+            Optional<Holder<ContextBlockPosProvider>> blockPos,
+            List<ContextEntityFunction> modifiers
+    ) implements ContextEntityProvider {
         public static final Codec<SummonEntity> INLINE_CODEC = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.byNameCodec().xmap(SummonEntity::new, SummonEntity::entityType);
         public static final MapCodec<SummonEntity> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.byNameCodec().fieldOf("entity_type").forGetter(SummonEntity::entityType),
-                LocationProvider.REFERENCE_CODEC.optionalFieldOf("position").forGetter(SummonEntity::position),
-                LootEntityFunction.DIRECT_CODEC.listOf().optionalFieldOf("modifiers", List.of()).forGetter(SummonEntity::modifiers)
+                ContextBlockPosProvider.REFERENCE_CODEC.optionalFieldOf("block_pos").forGetter(SummonEntity::blockPos),
+                ContextEntityFunction.DIRECT_CODEC.listOf().optionalFieldOf("modifiers", List.of()).forGetter(SummonEntity::modifiers)
         ).apply(instance, SummonEntity::new));
 
         public SummonEntity(EntityType<?> entityType) {
@@ -73,19 +73,19 @@ public interface EntityProvider extends LootContextUser {
         @Override
         public Entity get(LootContext context) {
             ServerLevel level = context.getLevel();
-            BlockPos blockPos = this.position
+            BlockPos blockPos = this.blockPos
                     .map(provider -> provider.value().getBlockPos(context))
-                    .orElseGet(() -> LocationProvider.origin().getBlockPos(context));
+                    .orElseGet(() -> ContextBlockPosProvider.origin().getBlockPos(context));
             return this.entityType.spawn(level, blockPos, MobSpawnType.TRIGGERED);
         }
 
         @Override
-        public MapCodec<? extends EntityProvider> codec() {
+        public MapCodec<? extends ContextEntityProvider> codec() {
             return MAP_CODEC;
         }
     }
 
-    record ThisEntity() implements EntityProvider {
+    record ThisEntity() implements ContextEntityProvider {
         public static final ThisEntity INSTANCE = new ThisEntity();
         public static final MapCodec<ThisEntity> MAP_CODEC = MapCodec.unit(INSTANCE);
 
@@ -95,7 +95,7 @@ public interface EntityProvider extends LootContextUser {
         }
 
         @Override
-        public MapCodec<? extends EntityProvider> codec() {
+        public MapCodec<? extends ContextEntityProvider> codec() {
             return MAP_CODEC;
         }
 
@@ -105,7 +105,7 @@ public interface EntityProvider extends LootContextUser {
         }
     }
 
-    record AttackingEntity() implements EntityProvider {
+    record AttackingEntity() implements ContextEntityProvider {
         public static final AttackingEntity INSTANCE = new AttackingEntity();
         public static final MapCodec<AttackingEntity> MAP_CODEC = MapCodec.unit(INSTANCE);
 
@@ -115,7 +115,7 @@ public interface EntityProvider extends LootContextUser {
         }
 
         @Override
-        public MapCodec<? extends EntityProvider> codec() {
+        public MapCodec<? extends ContextEntityProvider> codec() {
             return MAP_CODEC;
         }
 
@@ -125,7 +125,7 @@ public interface EntityProvider extends LootContextUser {
         }
     }
 
-    record DirectAttackingEntity() implements EntityProvider {
+    record DirectAttackingEntity() implements ContextEntityProvider {
         public static final DirectAttackingEntity INSTANCE = new DirectAttackingEntity();
         public static final MapCodec<DirectAttackingEntity> MAP_CODEC = MapCodec.unit(INSTANCE);
 
@@ -135,7 +135,7 @@ public interface EntityProvider extends LootContextUser {
         }
 
         @Override
-        public MapCodec<? extends EntityProvider> codec() {
+        public MapCodec<? extends ContextEntityProvider> codec() {
             return MAP_CODEC;
         }
 

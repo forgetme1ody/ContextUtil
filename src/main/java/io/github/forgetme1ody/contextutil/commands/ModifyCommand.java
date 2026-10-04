@@ -3,7 +3,7 @@ package io.github.forgetme1ody.contextutil.commands;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import io.github.forgetme1ody.contextutil.loot.functions.LootEntityFunction;
+import io.github.forgetme1ody.contextutil.loot.functions.ContextEntityFunction;
 import io.github.forgetme1ody.contextutil.registries.Registries;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -33,11 +33,11 @@ public final class ModifyCommand {
     public static ArgumentBuilder<CommandSourceStack, ?> register(CommandBuildContext buildContext) {
         return Commands.literal("modify")
                 .then(Commands.literal("entity")
-                        .then(Commands.argument("modifier", ResourceArgument.resource(buildContext, Registries.ENTITY_MODIFIER))
+                        .then(Commands.argument("modifier", ResourceArgument.resource(buildContext, Registries.CONTEXT_ENTITY_FUNCTION))
                                 .then(Commands.argument("target", EntityArgument.entities())
                                         .executes(context -> modifyEntity(
                                                         context.getSource(),
-                                                        ResourceArgument.getResource(context, "modifier", Registries.ENTITY_MODIFIER),
+                                                        ResourceArgument.getResource(context, "modifier", Registries.CONTEXT_ENTITY_FUNCTION),
                                                         EntityArgument.getEntities(context, "target")
                                                 )
                                         )
@@ -49,7 +49,7 @@ public final class ModifyCommand {
 
     private static int modifyEntity(
             CommandSourceStack source,
-            Holder<LootEntityFunction> modifier,
+            Holder<ContextEntityFunction> modifier,
             Collection<? extends Entity> entities
     ) throws CommandSyntaxException {
         int size = entities.size();
